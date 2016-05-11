@@ -12,7 +12,9 @@ module Typhoeus
       #
       # @return [ Response ] The response.
       def run
+        Rails.logger.info("Calling easy")
         easy = EasyFactory.new(self).get
+        Rails.logger.info("Calling easy perform")
         easy.perform
         response
       end
@@ -26,13 +28,16 @@ module Typhoeus
       #
       # @return [Typhoeus::Response] The response.
       def finish(response, bypass_memoization = nil)
+        Rails.logger.info("#{response} Calling easy perform")
         if bypass_memoization
           @response = response
         else
           self.response = response
         end
         self.response.request = self
+        Rails.logger.info("[Easy] exacuting callbacks")
         execute_callbacks
+        Rails.logger.info("[Easy] response")
         response
       end
     end
