@@ -55,7 +55,9 @@ module Faraday # :nodoc:
       # @return [ void ]
       def call(env)
         super
+        Rails.logger.info("In the Typhoeus call")
         perform_request env
+        Rails.logger.info("[Typhoeus] about to call the app with env #{env}")
         @app.call env
       end
 
@@ -63,8 +65,10 @@ module Faraday # :nodoc:
 
       def perform_request(env)
         if parallel?(env)
+          Rails.logger.info("[Typhoeus] parallel")
           env[:parallel_manager].queue request(env)
         else
+          Rails.logger.info("[Typhoeus] not-parallel")
           request(env).run
         end
       end
@@ -72,6 +76,7 @@ module Faraday # :nodoc:
       def request(env)
         read_body env
 
+        Rails.logger.info("[Typhoeus] body read")
         req = ::Typhoeus::Request.new(
           env[:url].to_s,
           :method  => env[:method],
@@ -83,26 +88,33 @@ module Faraday # :nodoc:
         configure_proxy   req, env
         configure_timeout req, env
         configure_socket  req, env
+        Rails.logger.info("[Typhoeus] setup completed")
 
         req.on_complete do |resp|
           if resp.timed_out?
+           Rails.logger.info("[Typhoeus] timed out")
             env[:typhoeus_timed_out] = true
             unless parallel?(env)
               raise Faraday::Error::TimeoutError, "request timed out"
             end
           elsif resp.response_code == 0
+           Rails.logger.info("[Typhoeus] response code was 0")
             env[:typhoeus_connection_failed] = true
             unless parallel?(env)
               raise Faraday::Error::ConnectionFailed, resp.return_message
             end
           end
 
+           Rails.logger.info("[Typhoeus] saving response #{env}")
           save_response(env, resp.code, resp.body) do |response_headers|
+           Rails.logger.info("[Typhoeus] headers #{response_headers}")
             response_headers.parse resp.response_headers
           end
+           Rails.logger.info("[Typhoeus] response has been completed")
           # in async mode, :response is initialized at this point
           env[:response].finish(env) if parallel?(env)
         end
+           Rails.logger.info("[Typhoeus] done #{req}")
 
         req
       end
