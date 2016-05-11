@@ -32,11 +32,13 @@ module Typhoeus
     def self.get
       @mutex.synchronize do
         if @pid == Process.pid
+          Rails.logger.info("[Typhoeus] using pool #{@pid}")
           easies.pop
         else
           # Process has forked. Clear all easies to avoid sockets being
           # shared between processes.
           @pid = Process.pid
+          Rails.logger.info("[Typhoeus] process forked #{@pid}")
           easies.clear
           nil
         end
