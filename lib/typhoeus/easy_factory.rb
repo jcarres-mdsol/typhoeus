@@ -68,7 +68,7 @@ module Typhoeus
     #
     # @return [ Ethon::Easy ] The easy.
     def easy
-      Rails.logger.info("[Easy] easy #{@easy}")
+      Rails.logger.info("[Easy] getting easy #{@easy}")
       @easy ||= Typhoeus::Pool.get
     end
 
@@ -145,7 +145,6 @@ module Typhoeus
     def set_callback
       Rails.logger.info("[Easy] sets callback")
       if request.streaming?
-      Rails.logger.info("[Easy] streaming")
         response = nil
         easy.on_headers do |easy|
           response = Response.new(Ethon::Easy::Mirror.from_easy(easy).options)
@@ -157,21 +156,20 @@ module Typhoeus
           end
         end
       else
-      Rails.logger.info("[Easy] not streaming")
         easy.on_headers do |easy|
           request.execute_headers_callbacks(Response.new(Ethon::Easy::Mirror.from_easy(easy).options))
         end
       end
       easy.on_complete do |easy|
-      Rails.logger.info("[Easy] completed request")
+        Rails.logger.info("[Easy] completed request")
         request.finish(Response.new(easy.mirror.options))
-      Rails.logger.info("[Easy] finished request")
+        Rails.logger.info("[Easy] finished request")
         Typhoeus::Pool.release(easy)
-      Rails.logger.info("[Easy] pool released #{hydra}")
+        Rails.logger.info("[Easy] pool released #{hydra}")
         if hydra && !hydra.queued_requests.empty?
           hydra.dequeue_many
         end
-      Rails.logger.info("[Easy] totally done ")
+        Rails.logger.info("[Easy] totally done ")
       end
     end
 

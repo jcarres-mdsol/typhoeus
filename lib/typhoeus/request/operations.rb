@@ -28,7 +28,6 @@ module Typhoeus
       #
       # @return [Typhoeus::Response] The response.
       def finish(response, bypass_memoization = nil)
-        Rails.logger.info("#{response} Calling easy perform")
         if bypass_memoization
           @response = response
         else
@@ -37,7 +36,7 @@ module Typhoeus
         self.response.request = self
         Rails.logger.info("[Easy] exacuting callbacks")
         execute_callbacks
-        Rails.logger.info("[Easy] response")
+        Rails.logger.info("[Easy] response #{self.response}")
         response
       end
     end
